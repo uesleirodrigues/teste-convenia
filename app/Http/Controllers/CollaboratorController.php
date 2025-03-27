@@ -2,68 +2,87 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Collaborator;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\CollaboratorImport;
+use App\Http\Requests\StoreCollaboratorRequest;
+use App\Http\Requests\UpdateCollaboratorRequest;
+use App\Http\Resources\CollaboratorResource;
+use App\Services\CollaboratorImportService;
+use Illuminate\Validation\ValidationException;
 
 class CollaboratorController extends Controller
 {
-    public function __construct()
+    protected $importService;
+
+    public function __construct(CollaboratorImportService $importService)
     {
-        $this->middleware('auth:api'); // Garantir que o usuário está autenticado
+        $this->middleware('auth:api');
+        $this->importService = $importService;
     }
 
-    /**
-     * Lista todos os colaboradores do usuário autenticado.
-     */
     public function index(): JsonResponse
     {
-        $collaborators = Auth::user()->collaborators; // Relacionamento no modelo User
-        return response()->json($collaborators);
+        $collaborators = Auth::user()->collaborators;
+        return response()->json(CollaboratorResource::collection($collaborators));
     }
 
-    /**
-     * Cadastra um novo colaborador.
-     */
-    public function store(Request $request): JsonResponse
+    public function store(StoreCollaboratorRequest $request): JsonResponse
     {
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:collaborators,email',
-            'cpf'   => 'required|string|unique:collaborators,cpf|regex:/^\d{11}$/',
-            'city'  => 'required|string|max:100',
-            'state' => 'required|string|max:2',
-        ]);
+        try {
+            // Validação
+            $collaborator = Auth::user()->collaborators()->create($request->validated());
 
-        $collaborator = Auth::user()->collaborators()->create($request->all());
-        return response()->json($collaborator, 201);
+            // Retorna o colaborador criado com sucesso
+            return response()->json(new CollaboratorResource($collaborator), 201);
+        } catch (ValidationException $e) {
+            // Captura erros de validação específicos
+            return response()->json([
+                'message' => 'Erro de validação',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            // Captura outros tipos de erros
+            return response()->json([
+                'message' => 'Erro ao criar colaborador',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Atualiza um colaborador existente.
-     */
-    public function update(Request $request, int $id): JsonResponse
+    public function update(UpdateCollaboratorRequest $request, int $id): JsonResponse
     {
-        $collaborator = Auth::user()->collaborators()->findOrFail($id);
+        try {
+            // Busca o colaborador do usuário autenticado
+            $collaborator = Auth::user()->collaborators()->findOrFail($id);
 
-        $request->validate([
-            'name'  => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:collaborators,email,' . $id,
-            'cpf'   => 'sometimes|string|regex:/^\d{11}$/',
-            'city'  => 'sometimes|string|max:100',
-            'state' => 'sometimes|string|max:2',
-        ]);
+            // Atualiza o colaborador com os dados validados
+            $collaborator->update($request->validated());
 
-        $collaborator->update($request->all());
-        return response()->json($collaborator);
+            // Retorna o colaborador atualizado com sucesso
+            return response()->json(new CollaboratorResource($collaborator));
+        } catch (ValidationException $e) {
+            // Captura erros de validação específicos
+            return response()->json([
+                'message' => 'Erro de validação',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Trata o caso de colaborador não encontrado
+            return response()->json([
+                'message' => 'Colaborador não encontrado',
+            ], 404);
+        } catch (\Exception $e) {
+            // Captura outros tipos de erros
+            return response()->json([
+                'message' => 'Erro ao atualizar colaborador',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Exclui um colaborador.
-     */
     public function destroy(int $id): JsonResponse
     {
         $collaborator = Auth::user()->collaborators()->findOrFail($id);
@@ -71,24 +90,15 @@ class CollaboratorController extends Controller
         return response()->json(null, 204);
     }
 
-    /**
-     * Importa colaboradores de um arquivo CSV e envia e-mail de notificação.
-     */
     public function import(Request $request): JsonResponse
     {
-        // Validação do arquivo
         $request->validate([
             'file' => 'required|file|mimes:csv,xlsx,xls|max:2048',
         ]);
 
         try {
-            // Processando o arquivo CSV
-            Excel::import(new CollaboratorImport(Auth::user()), $request->file('file'));
-
-            // Enviar o e-mail de notificação para o usuário após o processamento
-            \Mail::to(Auth::user()->email)->send(new \App\Mail\ImportNotificationMail());
-
-            return response()->json(['message' => 'Processamento realizado com sucesso!'], 200);
+            $result = $this->importService->importAndNotify(Auth::user(), $request->file('file'));
+            return response()->json(['message' => $result['message']], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Erro ao importar arquivo', 'details' => $e->getMessage()], 500);
         }

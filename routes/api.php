@@ -26,5 +26,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::delete('/collaborators/{id}', [CollaboratorController::class, 'destroy']);
 
     // Rota para importar do CSV
-    Route::post('/collaborators/import', [CollaboratorController::class, 'import']);
+    //Route::post('/collaborators/import', [CollaboratorController::class, 'import']);
+    Route::post('/collaborators/import', [CollaboratorController::class, 'import'])->middleware('auth:api');
+
 });
