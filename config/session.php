@@ -18,7 +18,12 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'array'),
+
+    'session' => [
+        'driver' => 'none',  // Se você não deseja usar o banco de dados para sessões
+        'expire_on_close' => true,
+    ],
 
     /*
     |--------------------------------------------------------------------------
