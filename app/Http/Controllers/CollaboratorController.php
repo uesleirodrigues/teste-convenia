@@ -26,7 +26,9 @@ class CollaboratorController extends Controller
     public function index(): JsonResponse
     {
         $collaborators = Auth::user()->collaborators;
-        return response()->json(CollaboratorResource::collection($collaborators));
+        return response()->json([
+            'data' => CollaboratorResource::collection($collaborators)
+        ]);
     }
 
     public function store(StoreCollaboratorRequest $request): JsonResponse
@@ -36,7 +38,9 @@ class CollaboratorController extends Controller
             $collaborator = Auth::user()->collaborators()->create($request->validated());
 
             // Retorna o colaborador criado com sucesso
-            return response()->json(new CollaboratorResource($collaborator), 201);
+            return response()->json([
+                'data' => new CollaboratorResource($collaborator)
+            ], 201);
         } catch (ValidationException $e) {
             // Captura erros de validação específicos
             return response()->json([
@@ -62,7 +66,9 @@ class CollaboratorController extends Controller
             $collaborator->update($request->validated());
 
             // Retorna o colaborador atualizado com sucesso
-            return response()->json(new CollaboratorResource($collaborator));
+            return response()->json([
+                'data' => new CollaboratorResource($collaborator)
+            ]);
         } catch (ValidationException $e) {
             // Captura erros de validação específicos
             return response()->json([
