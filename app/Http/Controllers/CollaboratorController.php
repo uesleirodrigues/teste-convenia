@@ -19,7 +19,7 @@ class CollaboratorController extends Controller
 
     public function __construct(CollaboratorImportService $importService)
     {
-        $this->middleware('auth:api');
+        //$this->middleware('auth:api'); Tirei porquê causa redirecionamento indevido pra página de login e quebra as validações.
         $this->importService = $importService;
     }
 

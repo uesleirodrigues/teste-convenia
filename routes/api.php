@@ -17,6 +17,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/collaborators', [CollaboratorController::class, 'store']);
 
     // Rota para listar os colaboradores do usuário logado
+    \Log::info('Acessando a rota de colaboradores');
     Route::get('/collaborators', [CollaboratorController::class, 'index']);
 
     // Rota para editar um colaborador (requisição PUT)
@@ -26,7 +27,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::delete('/collaborators/{id}', [CollaboratorController::class, 'destroy']);
 
     // Rota para importar do CSV
-    //Route::post('/collaborators/import', [CollaboratorController::class, 'import']);
-    Route::post('/collaborators/import', [CollaboratorController::class, 'import'])->middleware('auth:api');
+    Route::post('/collaborators/import', [CollaboratorController::class, 'import']);
+    //Route::post('/collaborators/import', [CollaboratorController::class, 'import'])->middleware('auth:api');
 
 });
