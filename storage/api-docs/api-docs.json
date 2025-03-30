@@ -1,0 +1,239 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API de Colaboradores",
+        "description": "Documentação da API para gerenciamento de colaboradores.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api": {},
+        "/api/collaborators": {
+            "get": {
+                "tags": [
+                    "Collaborators"
+                ],
+                "summary": "Lista todos os colaboradores",
+                "operationId": "3bad7de0da48224fdc7f177841872903",
+                "responses": {
+                    "200": {
+                        "description": "Lista de colaboradores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Collaborator"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro no servidor"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Collaborators"
+                ],
+                "summary": "Cria um novo colaborador",
+                "operationId": "95299406c39c1533f68255ccedfe7d9b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Collaborator"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Colaborador criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Collaborator"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    },
+                    "500": {
+                        "description": "Erro no servidor"
+                    }
+                }
+            }
+        },
+        "/api/collaborators/{id}": {
+            "put": {
+                "tags": [
+                    "Collaborators"
+                ],
+                "summary": "Atualiza um colaborador",
+                "operationId": "a640215bab0c29646ae2a95b3ebb2580",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do colaborador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Collaborator"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Colaborador atualizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Collaborator"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Colaborador não encontrado"
+                    },
+                    "500": {
+                        "description": "Erro no servidor"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Collaborators"
+                ],
+                "summary": "Exclui um colaborador",
+                "operationId": "0c024bfecd29ff9123842fbb0c92de5b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID do colaborador",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Colaborador excluído"
+                    },
+                    "404": {
+                        "description": "Colaborador não encontrado"
+                    },
+                    "500": {
+                        "description": "Erro no servidor"
+                    }
+                }
+            }
+        },
+        "/api/collaborators/import": {
+            "post": {
+                "tags": [
+                    "Collaborators"
+                ],
+                "summary": "Importa uma lista de colaboradores via arquivo CSV/Excel",
+                "operationId": "682fe4895e6de99df7963a7d98a0b4e2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Arquivo importado com sucesso"
+                    },
+                    "422": {
+                        "description": "Erro de validação"
+                    },
+                    "500": {
+                        "description": "Erro ao importar arquivo"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Collaborator": {
+                "title": "Collaborator",
+                "description": "Modelo de um colaborador",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "João da Silva"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "joao@email.com"
+                    },
+                    "cpf": {
+                        "type": "string",
+                        "example": "123.456.789-09"
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "São Paulo"
+                    },
+                    "state": {
+                        "type": "string",
+                        "example": "SP"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-03-29 14:30:00"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-03-29 15:00:00"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Collaborators",
+            "description": "Gerenciamento de Colaboradores"
+        }
+    ]
+}

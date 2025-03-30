@@ -17,7 +17,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/collaborators', [CollaboratorController::class, 'store']);
 
     // Rota para listar os colaboradores do usuário logado
-    \Log::info('Acessando a rota de colaboradores');
     Route::get('/collaborators', [CollaboratorController::class, 'index']);
 
     // Rota para editar um colaborador (requisição PUT)
