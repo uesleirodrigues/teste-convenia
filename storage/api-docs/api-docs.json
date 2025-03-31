@@ -197,19 +197,19 @@
                     },
                     "name": {
                         "type": "string",
-                        "example": "João da Silva"
+                        "example": "Ueslei Rodrigues"
                     },
                     "email": {
                         "type": "string",
-                        "example": "joao@email.com"
+                        "example": "uesleibarros@hotmail.com"
                     },
                     "cpf": {
                         "type": "string",
-                        "example": "123.456.789-09"
+                        "example": "12345678909"
                     },
                     "city": {
                         "type": "string",
-                        "example": "São Paulo"
+                        "example": "São José do Rio Preto"
                     },
                     "state": {
                         "type": "string",

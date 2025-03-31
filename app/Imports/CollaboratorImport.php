@@ -9,6 +9,13 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class CollaboratorImport implements ToModel, WithHeadingRow, WithChunkReading
 {
+    protected $userId;
+
+    public function __construct(int $userId)
+    {
+        $this->userId = $userId;
+    }
+
     /**
      * @param array $row
      * @return \Illuminate\Database\Eloquent\Model|null
@@ -21,7 +28,7 @@ class CollaboratorImport implements ToModel, WithHeadingRow, WithChunkReading
             'cpf' => $row['cpf'],
             'city' => $row['city'],
             'state' => $row['state'],
-            'user_id' => auth()->id(), // associando ao usuário logado
+            'user_id' => $this->userId, // Use a propriedade injetada
         ]);
     }
 

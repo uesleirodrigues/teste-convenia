@@ -20,8 +20,6 @@ class Authenticate
      */
     public function handle(Request $request, Closure $next)
     {
-        \Log::info('JwtCustomAuth Middleware Executado'); // Adicione esta linha
-
         try {
             if (! $user = JWTAuth::parseToken()->authenticate()) {
                 return response()->json(['status' => Response::HTTP_UNAUTHORIZED, 'message' => 'Token inválido'], Response::HTTP_UNAUTHORIZED);

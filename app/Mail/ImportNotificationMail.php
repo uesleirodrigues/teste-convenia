@@ -13,12 +13,16 @@ class ImportNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $fileName;
+
     /**
      * Construtor da mensagem
+     *
+     * @param string $fileName
      */
-    public function __construct()
+    public function __construct(string $fileName)
     {
-        // Posso passar algo para a view aqui
+        $this->fileName = $fileName;
     }
 
     /**
@@ -27,7 +31,7 @@ class ImportNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Importação de Colaboradores',
+            subject: 'Importação de Colaboradores Concluída',
         );
     }
 
@@ -38,6 +42,9 @@ class ImportNotificationMail extends Mailable
     {
         return new Content(
             view: 'emails.import_notification',
+            with: [
+                'fileName' => $this->fileName,
+            ],
         );
     }
 

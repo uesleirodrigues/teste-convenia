@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Collaborator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,9 @@ use App\Http\Resources\CollaboratorResource;
 use App\Services\CollaboratorImportService;
 use Illuminate\Validation\ValidationException;
 use OpenApi\Annotations as OA;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CollaboratorImport;
 
 /**
  * @OA\Tag(name="Collaborators", description="Gerenciamento de Colaboradores")
@@ -43,7 +47,17 @@ class CollaboratorController extends Controller
      */
     public function index(): JsonResponse
     {
-        $collaborators = Auth::user()->collaborators;
+        $userId = Auth::id();
+        $cacheKey = 'collaborators_' . $userId;
+
+        // Cache dos colaboradores por 10 minutos
+        $collaborators = Cache::remember($cacheKey, 10 * 60, function () {
+            \Log::info('Consulta ao banco de dados para colaboradores do usuário ' . Auth::id());
+            return Auth::user()->collaborators;
+        });
+
+        \Log::info('Dados de colaboradores para o usuário ' . Auth::id() . ' foram ' . (Cache::has($cacheKey) ? 'obtidos do cache' : 'buscados do banco'));
+
         return response()->json([
             'data' => CollaboratorResource::collection($collaborators)
         ]);
@@ -67,6 +81,10 @@ class CollaboratorController extends Controller
     {
         try {
             $collaborator = Auth::user()->collaborators()->create($request->validated());
+
+            // Invalida o cache depois de criar um novo colaborador
+            $this->invalidateCollaboratorsCache();
+
             return response()->json(['data' => new CollaboratorResource($collaborator)], 201);
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Erro de validação', 'errors' => $e->errors()], 422);
@@ -101,6 +119,10 @@ class CollaboratorController extends Controller
         try {
             $collaborator = Auth::user()->collaborators()->findOrFail($id);
             $collaborator->update($request->validated());
+
+            // Invalida o cache depois de atualizar
+            $this->invalidateCollaboratorsCache();
+
             return response()->json(['data' => new CollaboratorResource($collaborator)]);
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Erro de validação', 'errors' => $e->errors()], 422);
@@ -132,6 +154,10 @@ class CollaboratorController extends Controller
     {
         $collaborator = Auth::user()->collaborators()->findOrFail($id);
         $collaborator->delete();
+
+        // Invalida o cache depois de excluir
+        $this->invalidateCollaboratorsCache();
+
         return response()->json(null, 204);
     }
 
@@ -159,10 +185,32 @@ class CollaboratorController extends Controller
     {
         $request->validate(['file' => 'required|file|mimes:csv,xlsx,xls|max:2048']);
         try {
-            $result = $this->importService->importAndNotify(Auth::user(), $request->file('file'));
-            return response()->json(['message' => $result['message']], 200);
+            $file = $request->file('file');
+            $originalName = $file->getClientOriginalName();
+            $mimeType = $file->getClientMimeType();
+            $path = 'temp_imports/' . uniqid() . '_' . $originalName;
+            Storage::disk('local')->put($path, file_get_contents($file));
+
+            // Despacha o Job
+            \App\Jobs\ImportCollaborators::dispatch(
+                Auth::user(),
+                Storage::disk('local')->path($path),
+                $originalName,
+                $mimeType
+            );
+
+            return response()->json(['message' => 'Importação iniciada em segundo plano. Você será notificado ao ser finalizada a importação.'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Erro ao importar arquivo', 'details' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Erro ao iniciar importação', 'details' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Método auxiliar para invalidar o cache de colaboradores do usuário atual
+     */
+    protected function invalidateCollaboratorsCache(): void
+    {
+        $cacheKey = 'collaborators_' . Auth::id();
+        Cache::forget($cacheKey);
     }
 }

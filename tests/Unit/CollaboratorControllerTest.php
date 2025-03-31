@@ -8,6 +8,9 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Collaborator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
 
 class CollaboratorControllerTest extends TestCase
 {
@@ -27,7 +30,7 @@ class CollaboratorControllerTest extends TestCase
         $this->token = JWTAuth::fromUser($this->user);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_create_a_collaborator()
     {
         $collaboratorData = [
@@ -61,7 +64,7 @@ class CollaboratorControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_cannot_create_collaborator_with_invalid_data()
     {
         $invalidData = [
@@ -81,7 +84,7 @@ class CollaboratorControllerTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_update_a_collaborator()
     {
         // Cria um colaborador para o usuário
@@ -120,7 +123,7 @@ class CollaboratorControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_list_collaborators()
     {
         // Cria alguns colaboradores para o usuário
@@ -136,7 +139,7 @@ class CollaboratorControllerTest extends TestCase
             ->assertJsonCount(3, 'data');
     }
 
-    /** @test */
+    #[Test]
     public function it_can_delete_a_collaborator()
     {
         // Cria um colaborador para o usuário
