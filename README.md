@@ -74,7 +74,6 @@ Este projeto é uma API REST desenvolvida em Laravel para gerenciamento de colab
 
 ### Autenticação
 - **Login**: `POST /api/login`
-- **Logout**: `POST /api/logout`
 
 ### Colaboradores
 - **Listar**: `GET /api/collaborators`

@@ -6,9 +6,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CollaboratorController;
 use App\Http\Controllers\CollaboratorImportController;
 
-// Rota para autenticação (login/logout)
+// Rota para autenticação (login)
 Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout']);
 
 // Rotas protegidas por autenticação JWT
 Route::middleware('jwt.auth')->group(function () {

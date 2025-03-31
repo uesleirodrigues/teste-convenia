@@ -53,17 +53,6 @@ class AuthController extends Controller
     }
 
     /**
-     * Efetuar logout e revogar o token de autenticação.
-     */
-    public function logout(Request $request)
-    {
-        // Revogar o token atual do usuário
-        JWTAuth::invalidate(JWTAuth::getToken());
-
-        return response()->json(['message' => 'Logout bem-sucedido']);
-    }
-
-    /**
      * Método para obter os detalhes do usuário autenticado.
      */
     public function user(Request $request)

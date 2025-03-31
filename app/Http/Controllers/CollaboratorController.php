@@ -32,10 +32,15 @@ class CollaboratorController extends Controller
      *         response=200,
      *         description="Lista de colaboradores",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/Collaborator")
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Collaborator")
+     *             )
      *         )
      *     ),
+     *     @OA\Response(response=401, description="Token expirado ou inválido"),
      *     @OA\Response(response=500, description="Erro no servidor")
      * )
      */
@@ -66,9 +71,36 @@ class CollaboratorController extends Controller
      *         required=true,
      *         @OA\JsonContent(ref="#/components/schemas/Collaborator")
      *     ),
-     *     @OA\Response(response=201, description="Colaborador criado com sucesso", @OA\JsonContent(ref="#/components/schemas/Collaborator")),
-     *     @OA\Response(response=422, description="Erro de validação"),
-     *     @OA\Response(response=500, description="Erro no servidor")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Colaborador criado com sucesso",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", ref="#/components/schemas/Collaborator")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Erro de validação"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Token expirado ou inválido"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro no servidor",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Erro ao criar colaborador"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
      * )
      */
     public function store(StoreCollaboratorRequest $request): JsonResponse
@@ -103,9 +135,44 @@ class CollaboratorController extends Controller
      *         required=true,
      *         @OA\JsonContent(ref="#/components/schemas/Collaborator")
      *     ),
-     *     @OA\Response(response=200, description="Colaborador atualizado", @OA\JsonContent(ref="#/components/schemas/Collaborator")),
-     *     @OA\Response(response=404, description="Colaborador não encontrado"),
-     *     @OA\Response(response=500, description="Erro no servidor")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Colaborador atualizado com sucesso",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="data", ref="#/components/schemas/Collaborator")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Colaborador não encontrado",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Colaborador não encontrado")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Erro de validação"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Token expirado ou inválido"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao atualizar colaborador",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Erro ao atualizar colaborador"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
      * )
      */
     public function update(UpdateCollaboratorRequest $request, int $id): JsonResponse
@@ -139,20 +206,58 @@ class CollaboratorController extends Controller
      *         description="ID do colaborador",
      *         @OA\Schema(type="integer", example=1)
      *     ),
-     *     @OA\Response(response=204, description="Colaborador excluído"),
-     *     @OA\Response(response=404, description="Colaborador não encontrado"),
-     *     @OA\Response(response=500, description="Erro no servidor")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Colaborador excluído com sucesso",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Colaborador excluído com sucesso")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Colaborador não encontrado",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Colaborador não encontrado"),
+     *             @OA\Property(property="details", type="string", example="Não foi possível encontrar um colaborador com ID: 1")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Token expirado ou inválido"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro no servidor",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Erro ao excluir colaborador"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
      * )
      */
     public function destroy(int $id): JsonResponse
     {
-        $collaborator = Auth::user()->collaborators()->findOrFail($id);
-        $collaborator->delete();
+        try {
+            $collaborator = Auth::user()->collaborators()->findOrFail($id);
+            $collaborator->delete();
 
-        // Invalida o cache depois de excluir
-        $this->invalidateCollaboratorsCache();
+            $this->invalidateCollaboratorsCache();
 
-        return response()->json(null, 204);
+            return response()->json(['message' => 'Colaborador excluído com sucesso'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Colaborador não encontrado',
+                'details' => "Não foi possível encontrar um colaborador com ID: {$id}"
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao excluir colaborador',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -170,9 +275,40 @@ class CollaboratorController extends Controller
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Arquivo importado com sucesso"),
-     *     @OA\Response(response=422, description="Erro de validação"),
-     *     @OA\Response(response=500, description="Erro ao importar arquivo")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Arquivo importado com sucesso",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Importação iniciada em segundo plano. Você será notificado ao ser finalizada a importação."
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Erro de validação",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Token expirado ou inválido"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Erro ao importar arquivo",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Erro ao iniciar importação"),
+     *             @OA\Property(property="details", type="string")
+     *         )
+     *     )
      * )
      */
     public function import(Request $request): JsonResponse
