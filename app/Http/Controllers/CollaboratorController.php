@@ -22,6 +22,12 @@ use App\Imports\CollaboratorImport;
  */
 class CollaboratorController extends Controller
 {
+    protected $importService;
+
+    public function __construct(CollaboratorImportService $importService)
+    {
+        $this->importService = $importService;
+    }
 
     /**
      * @OA\Get(
