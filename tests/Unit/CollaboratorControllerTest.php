@@ -150,7 +150,7 @@ class CollaboratorControllerTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->deleteJson("/api/collaborators/{$collaborator->id}");
 
-        $response->assertStatus(204);
+        $response->assertStatus(200);
         $this->assertDatabaseMissing('collaborators', ['id' => $collaborator->id]);
     }
 
